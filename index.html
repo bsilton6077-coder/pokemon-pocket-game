@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokémon Pocket</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: rgba(15, 23, 42, 0.8);
+        --panel-alt: rgba(30, 41, 59, 0.9);
+        --card-bg: #f8fafc;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --gold: #fbbf24;
+        --green: #34d399;
+        --red: #f87171;
+        --blue: #60a5fa;
+        --purple: #a78bfa;
+        --pink: #f9a8d4;
+        --shadow: rgba(15, 23, 42, 0.45);
+        --common: #dbeafe;
+        --rare: #93c5fd;
+        --epic: #c4b5fd;
+        --legendary: #f9a8d4;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #0b1020, #1e293b 60%, #0f172a);
+        color: var(--text);
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .app {
+        width: min(1200px, 100%);
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.7);
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 22px 24px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        margin: 0;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: clamp(2rem, 3vw, 2.8rem);
+      }
+
+      .currency-wrap {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(148, 163, 184, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
+      }
+
+      .chip .icon {
+        font-size: 1.1rem;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        padding: 20px 24px 24px;
+      }
+
+      .panel {
+        background: rgba(15, 23, 42, 0.68);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 20px;
+        padding: 18px;
+      }
+
+      .main-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+
+      .stat-label {
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+
+      .stat-value {
+        font-size: clamp(1.2rem, 2vw, 1.8rem);
+        font-weight: 800;
+      }
+
+      .progress-region {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .progress-bar {
+        position: relative;
+        width: 100%;
+        height: 18px;
+        background: rgba(148, 163, 184, 0.14);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        background: linear-gradient(90deg, var(--gold), var(--green));
+        border-radius: inherit;
+        transition: width 0.25s ease;
+      }
+
+      .pack-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: transform 0.15s ease, filter 0.2s ease, opacity 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .primary {
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        color: white;
+        box-shadow: 0 10px 25px rgba(245, 158, 11, 0.25);
+      }
+
+      .secondary {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--text);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .pack-results {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+        gap: 14px;
+      }
+
+      .pack-card {
+        position: relative;
+        min-height: 220px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(226,232,240,0.82));
+        border-radius: 16px;
+        border: 3px solid rgba(15, 23, 42, 0.18);
+        color: #111827;
+        padding: 12px;
+        box-shadow: 0 18px 28px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+        animation: popIn 0.28s ease;
+      }
+
+      .pack-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent 60%);
+      }
+
+      .card-type-tag {
+        position: relative;
+        z-index: 1;
+        display: inline-block;
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .card-emoji {
+        position: relative;
+        z-index: 1;
+        font-size: 3.1rem;
+        text-align: center;
+        margin: 11px 0 12px;
+      }
+
+      .card-name {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        font-size: 1.08rem;
+        font-weight: 800;
+        margin-bottom: 7px;
+      }
+
+      .card-type {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(17,24,39,0.75);
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .shop-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .shop-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+
+      .shop-label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .shop-name {
+        font-weight: 800;
+      }
+
+      .shop-desc {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .shop-cost {
+        font-weight: 800;
+        color: var(--gold);
+      }
+
+      .binder-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+        gap: 10px;
+      }
+
+      .binder-card {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 12px;
+        padding: 10px 8px;
+        text-align: center;
+        opacity: 0.5;
+        transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .binder-card.owned {
+        opacity: 1;
+        border-color: rgba(251, 191, 36, 0.7);
+        transform: translateY(-2px);
+      }
+
+      .binder-card .mini-emoji {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 8px;
+      }
+
+      .binder-card .mini-name {
+        font-size: 0.8rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+
+      .binder-card .mini-count {
+        font-size: 0.72rem;
+        color: var(--gold);
+        font-weight: 800;
+      }
+
+      .toast {
+        min-height: 26px;
+        margin-top: 6px;
+        color: #fef3c7;
+        font-weight: 700;
+      }
+
+      @keyframes popIn {
+        0% { opacity: 0; transform: translateY(12px) scale(0.92); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @media (max-width: 900px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .pack-results {
+          grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="topbar">
+        <h1>Pokémon Pocket</h1>
+        <div class="currency-wrap">
+          <div class="chip"><span class="icon">💰</span><span id="coinsDisplay">25</span></div>
+          <div class="chip"><span class="icon">🎴</span><span id="packsDisplay">0</span></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="main-panel panel">
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Collection</span>
+              <span id="collectionStat" class="stat-value">0/0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Unique</span>
+              <span id="uniqueStat" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Duplicates</span>
+              <span id="duplicateStat" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Packs</span>
+              <span id="packStat" class="stat-value">0</span>
+            </div>
+          </div>
+
+          <div class="progress-region">
+            <div class="progress-header">
+              <span>Binder completion</span>
+              <span id="completionPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="completionBar" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="pack-row">
+            <button id="openBasicBtn" class="primary">Open Basic Pack</button>
+            <button id="buyPackBtn" class="secondary">Buy Pack (10)</button>
+            <button id="buyPremiumBtn" class="secondary">Buy Premium (18)</button>
+          </div>
+
+          <div id="packResults" class="pack-results"></div>
+          <div id="toast" class="toast"></div>
+        </div>
+
+        <div class="sidebar">
+          <div class="panel">
+            <h3 style="margin-top: 0;">Shop</h3>
+            <div class="shop-list">
+              <div class="shop-item">
+                <div class="shop-label">
+                  <div class="shop-name">Basic Pack</div>
+                  <div class="shop-desc">Standard odds</div>
+                </div>
+                <div class="shop-cost">10</div>
+              </div>
+              <div class="shop-item">
+                <div class="shop-label">
+                  <div class="shop-name">Premium Pack</div>
+                  <div class="shop-desc">More rare cards</div>
+                </div>
+                <div class="shop-cost">18</div>
+              </div>
+              <div class="shop-item">
+                <div class="shop-label">
+                  <div class="shop-name">Legend Booster</div>
+                  <div class="shop-desc">Higher legendary chance</div>
+                </div>
+                <div class="shop-cost">26</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top: 0;">Binder</h3>
+            <div id="binderGrid" class="binder-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const TOTAL_CARDS = [
+        { name: 'Pikachu', type: 'Electric', emoji: '⚡', rarity: 'Common' },
+        { name: 'Bulbasaur', type: 'Grass', emoji: '🌿', rarity: 'Common' },
+        { name: 'Charmander', type: 'Fire', emoji: '🔥', rarity: 'Common' },
+        { name: 'Squirtle', type: 'Water', emoji: '💧', rarity: 'Common' },
+        { name: 'Eevee', type: 'Normal', emoji: '✨', rarity: 'Common' },
+        { name: 'Jigglypuff', type: 'Fairy', emoji: '🎵', rarity: 'Common' },
+        { name: 'Snorlax', type: 'Normal', emoji: '😴', rarity: 'Rare' },
+        { name: 'Gengar', type: 'Ghost', emoji: '👻', rarity: 'Rare' },
+        { name: 'Jolteon', type: 'Electric', emoji: '🌩️', rarity: 'Rare' },
+        { name: 'Venasaur', type: 'Grass', emoji: '🌱', rarity: 'Rare' },
+        { name: 'Blastoise', type: 'Water', emoji: '💦', rarity: 'Rare' },
+        { name: 'Mew', type: 'Psychic', emoji: '🔮', rarity: 'Epic' },
+        { name: 'Mewtwo', type: 'Psychic', emoji: '🧠', rarity: 'Epic' },
+        { name: 'Charizard', type: 'Fire', emoji: '🐉', rarity: 'Epic' },
+        { name: 'Articuno', type: 'Ice', emoji: '❄️', rarity: 'Legendary' },
+        { name: 'Rayquaza', type: 'Dragon', emoji: '🐲', rarity: 'Legendary' }
+      ];
+
+      const state = {
+        coins: 25,
+        packs: 0,
+        collection: {},
+        packsOpened: 0,
+        lastOpenedPack: []
+      };
+
+      const coinsDisplay = document.getElementById('coinsDisplay');
+      const packsDisplay = document.getElementById('packsDisplay');
+      const collectionStat = document.getElementById('collectionStat');
+      const uniqueStat = document.getElementById('uniqueStat');
+      const duplicateStat = document.getElementById('duplicateStat');
+      const packStat = document.getElementById('packStat');
+      const completionPercent = document.getElementById('completionPercent');
+      const completionBar = document.getElementById('completionBar');
+      const packResults = document.getElementById('packResults');
+      const binderGrid = document.getElementById('binderGrid');
+      const toast = document.getElementById('toast');
+
+      function getRarityColor(rarity) {
+        if (rarity === 'Common') return '#dbeafe';
+        if (rarity === 'Rare') return '#93c5fd';
+        if (rarity === 'Epic') return '#c4b5fd';
+        return '#f9a8d4';
+      }
+
+      function saveState() {
+        localStorage.setItem('pokemonPocketState', JSON.stringify(state));
+      }
+
+      function loadState() {
+        const saved = localStorage.getItem('pokemonPocketState');
+        if (!saved) return;
+        try {
+          const parsed = JSON.parse(saved);
+          Object.assign(state, parsed);
+        } catch (err) {
+          console.warn('Could not load saved state', err);
+        }
+      }
+
+      function getTotalOwned() {
+        return Object.values(state.collection).reduce((sum, count) => sum + count, 0);
+      }
+
+      function getUniqueOwned() {
+        return Object.keys(state.collection).length;
+      }
+
+      function getDuplicates() {
+        return getTotalOwned() - getUniqueOwned();
+      }
+
+      function updateStats() {
+        const unique = getUniqueOwned();
+        const total = TOTAL_CARDS.length;
+        const completion = total === 0 ? 0 : (unique / total) * 100;
+
+        coinsDisplay.textContent = String(state.coins);
+        packsDisplay.textContent = String(state.packs);
+        collectionStat.textContent = `${unique}/${total}`;
+        uniqueStat.textContent = String(unique);
+        duplicateStat.textContent = String(getDuplicates());
+        packStat.textContent = String(state.packsOpened);
+        completionPercent.textContent = `${Math.round(completion)}%`;
+        completionBar.style.width = `${completion}%`;
+      }
+
+      function renderPackResults(cards) {
+        packResults.innerHTML = '';
+
+        cards.forEach((card) => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'pack-card';
+          cardEl.style.borderColor = getRarityColor(card.rarity);
+
+          cardEl.innerHTML = `
+            <div class="card-type-tag" style="background:${getRarityColor(card.rarity)};">${card.rarity}</div>
+            <div class="card-emoji">${card.emoji}</div>
+            <div class="card-name">${card.name}</div>
+            <div class="card-type">${card.type}</div>
+          `;
+          packResults.appendChild(cardEl);
+        });
+      }
+
+      function renderBinder() {
+        binderGrid.innerHTML = '';
+
+        TOTAL_CARDS.forEach((card) => {
+          const count = state.collection[card.name] || 0;
+          const item = document.createElement('div');
+          item.className = `binder-card ${count > 0 ? 'owned' : ''}`;
+          item.innerHTML = `
+            <span class="mini-emoji">${card.emoji}</span>
+            <div class="mini-name">${card.name}</div>
+            <div class="mini-count">${count > 0 ? `${count}x` : 'Missing'}</div>
+          `;
+          binderGrid.appendChild(item);
+        });
+      }
+
+      function setToast(message) {
+        toast.textContent = message;
+      }
+
+      function chooseCardByRarity(type) {
+        const pool = TOTAL_CARDS.filter((card) => {
+          if (type === 'basic') return card.rarity === 'Common';
+          if (type === 'premium') return card.rarity !== 'Legendary';
+          if (type === 'legend') return card.rarity === 'Legendary' || card.rarity === 'Epic' || card.rarity === 'Rare';
+          return true;
+        });
+
+        return pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      function drawPack(mode = 'basic') {
+        const packSize = 5;
+        const pulled = [];
+
+        for (let i = 0; i < packSize; i++) {
+          let card;
+
+          if (mode === 'basic') {
+            const roll = Math.random();
+            if (roll < 0.62) card = chooseCardByRarity('basic');
+            else if (roll < 0.88) card = TOTAL_CARDS.filter(c => c.rarity === 'Rare')[Math.floor(Math.random() * 5)];
+            else if (roll < 0.97) card = TOTAL_CARDS.filter(c => c.rarity === 'Epic')[Math.floor(Math.random() * 3)];
+            else card = TOTAL_CARDS.filter(c => c.rarity === 'Legendary')[Math.floor(Math.random() * 2)];
+          } else if (mode === 'premium') {
+            const roll = Math.random();
+            if (roll < 0.42) card = TOTAL_CARDS.filter(c => c.rarity === 'Common')[Math.floor(Math.random() * 6)];
+            else if (roll < 0.8) card = TOTAL_CARDS.filter(c => c.rarity === 'Rare')[Math.floor(Math.random() * 5)];
+            else if (roll < 0.95) card = TOTAL_CARDS.filter(c => c.rarity === 'Epic')[Math.floor(Math.random() * 3)];
+            else card = TOTAL_CARDS.filter(c => c.rarity === 'Legendary')[Math.floor(Math.random() * 2)];
+          } else {
+            const roll = Math.random();
+            if (roll < 0.2) card = TOTAL_CARDS.filter(c => c.rarity === 'Common')[Math.floor(Math.random() * 6)];
+            else if (roll < 0.55) card = TOTAL_CARDS.filter(c => c.rarity === 'Rare')[Math.floor(Math.random() * 5)];
+            else if (roll < 0.85) card = TOTAL_CARDS.filter(c => c.rarity === 'Epic')[Math.floor(Math.random() * 3)];
+            else card = TOTAL_CARDS.filter(c => c.rarity === 'Legendary')[Math.floor(Math.random() * 2)];
+          }
+
+          pulled.push(card);
+          state.collection[card.name] = (state.collection[card.name] || 0) + 1;
+        }
+
+        state.packsOpened += 1;
+        state.lastOpenedPack = pulled;
+        renderPackResults(pulled);
+        renderBinder();
+        updateStats();
+        saveState();
+      }
+
+      function openBasicPack() {
+        if (state.coins < 10) {
+          setToast('Not enough coins for a pack!');
+          return;
+        }
+
+        state.coins -= 10;
+        state.packs += 1;
+        drawPack('basic');
+        setToast('You opened a Basic Pack!');
+      }
+
+      function buyPack() {
+        if (state.coins < 10) {
+          setToast('You need 10 coins to buy a pack.');
+          return;
+        }
+
+        state.coins -= 10;
+        state.packs += 1;
+        drawPack('basic');
+        setToast('Basic Pack purchased!');
+      }
+
+      function buyPremiumPack() {
+        if (state.coins < 18) {
+          setToast('You need 18 coins for a Premium Pack.');
+          return;
+        }
+
+        state.coins -= 18;
+        state.packs += 1;
+        drawPack('premium');
+        setToast('Premium Pack opened!');
+      }
+
+      function addDailyCoins() {
+        state.coins += 8;
+        setToast('Daily bonus collected: +8 coins!');
+        updateStats();
+        saveState();
+      }
+
+      document.getElementById('openBasicBtn').addEventListener('click', openBasicPack);
+      document.getElementById('buyPackBtn').addEventListener('click', buyPack);
+      document.getElementById('buyPremiumBtn').addEventListener('click', buyPremiumPack);
+
+      window.addEventListener('keydown', (event) => {
+        if (event.key.toLowerCase() === 'd') {
+          addDailyCoins();
+        }
+      });
+
+      function init() {
+        loadState();
+        renderBinder();
+        updateStats();
+        if (state.lastOpenedPack.length) {
+          renderPackResults(state.lastOpenedPack);
+        }
+        setToast('Welcome to Pokémon Pocket! Open packs and complete your binder!');
+      }
+
+      init();
+    </script>
+  </body>
+</html>
